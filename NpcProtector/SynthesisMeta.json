@@ -1,7 +1,7 @@
 {
   "Nickname": "NpcProtector",
   "Visibility": "Exclude",
-  "OneLineDescription": "",
-  "LongDescription": "",
+  "OneLineDescription": "Flags named NPCs as protected.",
+  "LongDescription": "This patcher is an alternative to the mod Protect Your People. Essentially it flags a ton of named NPCs as protected if they are not already flagged as essential or protected.",
   "PreferredAutoVersioning": "Default"
 }
