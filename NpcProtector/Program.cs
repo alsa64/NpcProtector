@@ -777,6 +777,15 @@ namespace EnemyReleveler
             #endregion
         };
 
+        enum output_level {
+            disabled,
+            normal,
+            verbose,
+            debug,
+        };
+
+        private const output_level OutputLevel = output_level.normal;
+
         public static int Main(string[] args)
         {
             return SynthesisPipeline.Instance.Patch<ISkyrimMod, ISkyrimModGetter>(
@@ -799,23 +808,42 @@ namespace EnemyReleveler
             {
                 //filter NPCs
                 if (!npcsToProtect.Contains(npc.EditorID ?? ""))
-                    // Console.WriteLine("[INFO] \"" + npc.EditorID + "\" is not in the list of NPCs to makr as protected.");
+                {
+                    if (OutputLevel == output_level.debug)
+                    {
+                        Console.WriteLine("[INFO] \"" + npc.EditorID +
+                                          "\" is not in the list of NPCs to makr as protected.");
+                    }
                     continue;
+                }
+
+
 
                 if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Essential))
                 {
-                    Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID + "\" is Essential and will be skipped.");
+                    if (OutputLevel == output_level.verbose || 
+                        OutputLevel == output_level.debug)
+                    {
+                        Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID + "\" is Essential and will be skipped.");
+                    }
                     continue;
                 }
 
                 if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Protected))
                 {
-                    Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID +
-                                      "\" is already protected and will be skipped.");
+                    if (OutputLevel == output_level.verbose || 
+                        OutputLevel == output_level.debug)
+                    {
+                        Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID +
+                                          "\" is already protected and will be skipped.");
+                    }
                     continue;
                 }
 
-                Console.WriteLine("[INFO] [Processing] \"" + npc.EditorID + "\" will be flagged as Protected.");
+                if (OutputLevel != output_level.disabled)
+                {
+                    Console.WriteLine("[INFO] [Processing] \"" + npc.EditorID + "\" will be flagged as Protected.");
+                }
 
                 var npcPatch = state.PatchMod.Npcs.GetOrAddAsOverride(npc);
                 npcPatch.Configuration.Flags |= NpcConfiguration.Flag.Protected;
