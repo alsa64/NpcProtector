@@ -12,7 +12,8 @@ namespace EnemyReleveler
 {
     public class Program
     {
-        private static readonly string[] npcsToProtect =
+        // This is a list of all EditorIDs of NPCs we want to check
+        private static readonly string[] NpCsToProtect =
         {
             #region
 
@@ -777,14 +778,57 @@ namespace EnemyReleveler
             #endregion
         };
 
-        enum output_level {
-            disabled,
-            normal,
-            verbose,
-            debug,
+        // Data type that defines a setting of how verbose the log should be.
+        private enum OutputLevel
+        {
+            Disabled,
+            Normal,
+            Verbose,
+            Debug,
         };
 
-        private const output_level OutputLevel = output_level.normal;
+        // can be set to any of the above levels of verboseness
+        private const OutputLevel PatcherOutputLevel = OutputLevel.Normal;
+
+        // Check if the NPC has the Protected Flag
+        private static bool NpcIsProtected(INpcGetter npc)
+        {
+            if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Protected)) return false;
+            if (PatcherOutputLevel == OutputLevel.Verbose ||
+                PatcherOutputLevel == OutputLevel.Debug)
+            {
+                Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID +
+                                  "\" is already protected and will be skipped.");
+            }
+
+            return true;
+        }
+
+        // Checks if the given NPC has the Essential Flag
+        private static bool NpcIsEssential(INpcGetter npc)
+        {
+            if (!npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Essential)) return false;
+            if (PatcherOutputLevel == OutputLevel.Verbose ||
+                PatcherOutputLevel == OutputLevel.Debug)
+            {
+                Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID + "\" is Essential and will be skipped.");
+            }
+
+            return true;
+        }
+
+        // Check if the NPC matches an entry in the list 
+        private static bool NpcMatchesListEditorID(INpcGetter npc)
+        {
+            if (NpCsToProtect.Contains(npc.EditorID ?? "")) return true;
+            if (PatcherOutputLevel == OutputLevel.Debug)
+            {
+                Console.WriteLine("[INFO] \"" + npc.EditorID +
+                                  "\" is not in the list of NPCs to mark as protected.");
+            }
+
+            return false;
+        }
 
         public static int Main(string[] args)
         {
@@ -806,48 +850,23 @@ namespace EnemyReleveler
         {
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
-                //filter NPCs
-                if (!npcsToProtect.Contains(npc.EditorID ?? ""))
-                {
-                    if (OutputLevel == output_level.debug)
-                    {
-                        Console.WriteLine("[INFO] \"" + npc.EditorID +
-                                          "\" is not in the list of NPCs to makr as protected.");
-                    }
-                    continue;
-                }
+                // filter out NPCs that don't match the EditorIDs defined in NpcsToProtect, are already flagged as protected or flagged as essential
+                if (!NpcMatchesListEditorID(npc)) continue;
 
+                if (NpcIsEssential(npc)) continue;
 
+                if (NpcIsProtected(npc)) continue;
 
-                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Essential))
-                {
-                    if (OutputLevel == output_level.verbose || 
-                        OutputLevel == output_level.debug)
-                    {
-                        Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID + "\" is Essential and will be skipped.");
-                    }
-                    continue;
-                }
-
-                if (npc.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Protected))
-                {
-                    if (OutputLevel == output_level.verbose || 
-                        OutputLevel == output_level.debug)
-                    {
-                        Console.WriteLine("[INFO] [Skipping] \"" + npc.EditorID +
-                                          "\" is already protected and will be skipped.");
-                    }
-                    continue;
-                }
-
-                if (OutputLevel != output_level.disabled)
+                if (PatcherOutputLevel != OutputLevel.Disabled)
                 {
                     Console.WriteLine("[INFO] [Processing] \"" + npc.EditorID + "\" will be flagged as Protected.");
                 }
 
+                // Patch NPCs
                 var npcPatch = state.PatchMod.Npcs.GetOrAddAsOverride(npc);
                 npcPatch.Configuration.Flags |= NpcConfiguration.Flag.Protected;
 
+                // Handle error of NPC not being flagged as protected after it should have been
                 if (!npcPatch.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Protected))
                     Console.WriteLine("[ERROR] \"" + npc.EditorID +
                                       "\" was not flagged as Protected for whatever reason.");
