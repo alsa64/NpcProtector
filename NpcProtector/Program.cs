@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
@@ -8,12 +9,12 @@ using Noggog;
 
 #endregion
 
-namespace EnemyReleveler
+namespace NpcProtector
 {
     public class Program
     {
         // This is a list of all EditorIDs of NPCs we want to check
-        private static readonly string[] NpCsToProtect =
+        private static IReadOnlySet<string> NpCsToProtect = new HashSet<string>()
         {
             #region
 
@@ -839,9 +840,8 @@ namespace EnemyReleveler
                 {
                     ActionsForEmptyArgs = new RunDefaultPatcher
                     {
-                        IdentifyingModKey = "enemies_releveled.esp",
-                        TargetRelease = GameRelease.SkyrimSE,
-                        BlockAutomaticExit = true
+                        IdentifyingModKey = "NpcProtector.esp",
+                        TargetRelease = GameRelease.SkyrimSE
                     }
                 });
         }
