@@ -5,9 +5,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Mutagen.Bethesda" Version="0.26.7" />
-        <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.16.12" />
-        <PackageReference Include="GitInfo" Version="*">
+        <PackageReference Include="Mutagen.Bethesda" Version="0.30.0-prerelease001" />
+        <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.19.0-prerelease001" />
+        <PackageReference Include="GitInfo" Version="2.1.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
