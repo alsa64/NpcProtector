@@ -2,10 +2,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
-using Noggog;
+// ReSharper disable All
 
 #endregion
 
@@ -818,7 +819,7 @@ namespace NpcProtector
             return true;
         }
 
-        // Check if the NPC matches an entry in the list 
+        // Check if the NPC matches an entry in the list
         private static bool NpcMatchesListEditorID(INpcGetter npc)
         {
             if (NpCsToProtect.Contains(npc.EditorID ?? "")) return true;
@@ -831,22 +832,14 @@ namespace NpcProtector
             return false;
         }
 
-        public static int Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
-            return SynthesisPipeline.Instance.Patch<ISkyrimMod, ISkyrimModGetter>(
-                args,
-                RunPatch,
-                new UserPreferences
-                {
-                    ActionsForEmptyArgs = new RunDefaultPatcher
-                    {
-                        IdentifyingModKey = "NpcProtector.esp",
-                        TargetRelease = GameRelease.SkyrimSE
-                    }
-                });
+	        return await SynthesisPipeline.Instance
+		        .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
+		        .SetTypicalOpen(GameRelease.SkyrimSE, "NpcProtector.esp")
+		        .Run(args);
         }
-
-        public static void RunPatch(SynthesisState<ISkyrimMod, ISkyrimModGetter> state)
+        public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
             {
