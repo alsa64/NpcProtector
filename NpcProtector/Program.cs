@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
@@ -79,11 +80,8 @@ namespace NpcProtector
         }
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
+            foreach (var npc in _settings.Value.NpcsToProtect.Select(x => state.LinkCache.Resolve<INpcGetter>(x.FormKey)))
             {
-                // filter out NPCs that don't match the EditorIDs defined in NpcsToProtect, are already flagged as protected or flagged as essential
-                if (!NpcMatchesListEditorID(npc)) continue;
-
                 if (NpcIsEssential(npc)) continue;
 
                 if (NpcIsProtected(npc)) continue;
@@ -102,6 +100,30 @@ namespace NpcProtector
                     Console.WriteLine("[ERROR] \"" + npc.EditorID +
                                       "\" was not flagged as Protected for whatever reason.");
             }
+
+            // foreach (var npc in state.LoadOrder.PriorityOrder.WinningOverrides<INpcGetter>())
+            // {
+            //     // filter out NPCs that don't match the EditorIDs defined in NpcsToProtect, are already flagged as protected or flagged as essential
+            //     if (!NpcMatchesListEditorID(npc)) continue;
+
+            //     if (NpcIsEssential(npc)) continue;
+
+            //     if (NpcIsProtected(npc)) continue;
+
+            //     if (PatcherOutputLevel != OutputLevel.Disabled)
+            //     {
+            //         Console.WriteLine("[INFO] [Processing] \"" + npc.EditorID + "\" will be flagged as Protected.");
+            //     }
+
+            //     // Patch NPCs
+            //     var npcPatch = state.PatchMod.Npcs.GetOrAddAsOverride(npc);
+            //     npcPatch.Configuration.Flags |= NpcConfiguration.Flag.Protected;
+
+            //     // Handle error of NPC not being flagged as protected after it should have been
+            //     if (!npcPatch.Configuration.Flags.HasFlag(NpcConfiguration.Flag.Protected))
+            //         Console.WriteLine("[ERROR] \"" + npc.EditorID +
+            //                           "\" was not flagged as Protected for whatever reason.");
+            // }
         }
     }
 }
